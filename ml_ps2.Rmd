@@ -12,7 +12,6 @@ library(AER)
 library(fastDummies)
 library(glmnet)
 library(class)
-library(knitr)
 library(tidyverse)
 
 ```
@@ -89,7 +88,7 @@ nrow(Fatalities)
 ```{r}
 
 data <- Fatalities %>% 
-  na.omit()
+  drop_na()
 
 
 nrow(data)
@@ -119,19 +118,20 @@ Now, consider the prediction problem where you want to predict number of single 
 
 ### 3. Convert the categorical variables to indicator variables (also called “dummy” variables) and run a linear regression. What is the adjusted R2? (1 pt)
 
-Adjusted R-squared:  0.9957 
+Adjusted R-squared:  0.981 
 
 ```{r}
 
 # making all factors binary, even year and state, which is kind of a new idea to me. 
 
+# move column 19 (sfatal) to last column 
+
 binary <- data %>% 
-          dummy_cols(select_columns = "state") %>%
-          dummy_cols(select_columns = "year") %>% 
-          mutate(breath = ifelse(breath == "yes", 1, 0)) %>%
-          mutate(jail = ifelse(jail == "yes", 1, 0)) %>% 
-          mutate(service = ifelse(service == "yes", 1, 0)) %>% 
-          na.omit()
+          dummy_cols(select_columns = c("state", "breath", "jail", "service", "year"),
+                     remove_selected_columns = TRUE, remove_first_dummy = TRUE) %>%        
+          select(-fatal, -nfatal, -fatal1517, -nfatal1517, -fatal1820, -nfatal1820, -fatal2124, -nfatal2124, -afatal) %>%
+          select_(.dots = c(setdiff(names(.), 'sfatal'), 'sfatal'))
+       
 
 model_3 <- lm(sfatal ~ ., data = binary)
 
@@ -145,17 +145,11 @@ find_r2 <- summary(model_3)
 
 ```{r}
 
-# move column 19 (sfatal) to last column 
+whereami <- colnames(binary)
 
-binary2 <- binary %>% 
-           select_(.dots = c(setdiff(names(.), 'sfatal'), 'sfatal')) %>% 
-            na.omit()
+# sfatal is now column 76
 
-whereami <- colnames(binary2)
-
-# sfatal is now column 89
-
-# will this get rid of a weird error msg? Everything is numeric or integer so WHY is r telling me its not... 
+# will this get rid of a weird error msg? 
 
 binary2$breath <- as.numeric(binary$breath)
 binary2$jail <- as.numeric(binary$jail)
@@ -166,23 +160,52 @@ binary2$service <- as.numeric(binary$service)
 set.seed(222)
 
 
-lasso <- cv.glmnet(x = as.matrix(binary2[,1:88]),
-                   y = as.numeric(binary2[,89]), standardize = TRUE)  
+lasso <- cv.glmnet(x = as.matrix(binary[,1:75]),
+                   y = as.numeric(binary[,76]), 
+                   nfold = 5, 
+                   standardize = TRUE)  
 
-print(lasso$lambda)
-
-
-
-# Here's the error msg: Error in elnet(x, is.sparse, ix, jx, y, weights, offset, type.gaussian, : NA/NaN/Inf in foreign function call (arg 5). Per GitHub help page, this error is common when variables with (close to) zero variance are now no longer normalized. 
-
+print(round(lasso$cvm,3))
 
 ```
 
 
 • Which λ had the lowest mean cross-validation error for 5 fold cross validation?
+
+```{r}
+
+print(lasso$lambda.min) %>% round(digits = 3)
+
+```
+
 • What was the cross-validation error?
+
+```{r}
+
+# ?
+
+```
+
+
 • What was the standard error of the mean cross-validation error for this value of λ?
+
+```{r}
+
+
+
+```
+
+
 • What was the largest value of λ whose mean cross validation error was within one standard deviation of the lowest cross-validation error?
+
+```{r}
+
+#lambda.1se tells us thelambda w/in 1 SE of min lambda
+
+print(lasso$lambda.1se) %>% round(digits = 3)
+
+```
+
 
 
 ### 5. Using the same data, implement your own 5-fold cross-validation routine for KNN for k =
@@ -217,23 +240,21 @@ cross_validation_KNN  <- function(data_x, data_y, k_seq, kfolds) {
                                  cl = data_y[which(fold_ids != fold)],
                                  k = k)
         
-        ## Measure and save error rate (% wrong)
         CV_error_mtx[k,fold]  <- mean(knn_fold_model !=
                                         data_y[which(fold_ids == fold)])
       }
     }
     
     return(CV_error_mtx)
-    
 }
 
 set.seed(222) 
 
- knn_cv_error  <- cross_validation_KNN(data_x = binary[,-19],
-                                                data_y = binary[,19],
+ knn_cv_error  <- cross_validation_KNN(data_x = binary[,-76],
+                                                data_y = binary[,76],
                                                 k_seq = seq(20),
                                                 kfolds = 5)
-View(knn_cv_error)
+print(knn_cv_error)
 
 ``` 
 
