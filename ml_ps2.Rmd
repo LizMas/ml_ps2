@@ -2,7 +2,7 @@
 title: "Problem Set 2"
 author: "Liz Masten"
 date: "10/11/2020"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -81,6 +81,8 @@ One observation contained at least one NA value.
 
 ```{r}
 
+data("Fatalities")
+
 nrow(Fatalities)
 
 ``` 
@@ -96,8 +98,7 @@ nrow(data)
 ```
 
 
-### 2. Which variables are categorical variables? How many classes do each of these categorical
-variables have? (1 pt)
+### 2. Which variables are categorical variables? How many classes do each of these categorical variables have? (1 pt)
 
 5 variables are categorical: 
 
@@ -151,9 +152,9 @@ whereami <- colnames(binary)
 
 # will this get rid of a weird error msg? 
 
-binary2$breath <- as.numeric(binary$breath)
-binary2$jail <- as.numeric(binary$jail)
-binary2$service <- as.numeric(binary$service)
+binary$breath <- as.numeric(binary$breath)
+binary$jail <- as.numeric(binary$jail)
+binary$service <- as.numeric(binary$service)
 
 
 
@@ -165,16 +166,20 @@ lasso <- cv.glmnet(x = as.matrix(binary[,1:75]),
                    nfold = 5, 
                    standardize = TRUE)  
 
-print(round(lasso$cvm,3))
+print(lasso$lambda)
+
+# print(round(lasso$cvm,3))
 
 ```
 
 
 • Which λ had the lowest mean cross-validation error for 5 fold cross validation?
 
+Lambda number 76 
+
 ```{r}
 
-print(lasso$lambda.min) %>% round(digits = 3)
+# print(lasso$lambda.min) %>% round(digits = 3)
 
 ```
 
@@ -182,7 +187,7 @@ print(lasso$lambda.min) %>% round(digits = 3)
 
 ```{r}
 
-# ?
+print(lasso$lambda.min) %>% round(digits = 3)
 
 ```
 
@@ -191,7 +196,7 @@ print(lasso$lambda.min) %>% round(digits = 3)
 
 ```{r}
 
-
+#?
 
 ```
 
@@ -216,7 +221,6 @@ beer) using all of the other variables. Include the snippet of code you wrote he
 not exceed 20 lines. Which k is best according to CV? (2 pts)
 
 ```{r}
-
 
 cross_validation_KNN  <- function(data_x, data_y, k_seq, kfolds) {
     
@@ -256,7 +260,31 @@ set.seed(222)
                                                 kfolds = 5)
 print(knn_cv_error)
 
+mean_cv_error <- rowMeans(knn_cv_error)
+
+x <- c(1:20)
+
+df <- as.data.frame(mean_cv_error) 
+
+df <- tibble::rowid_to_column(df, "k")
+
 ``` 
+
+### 6. Plot mean cross-validation MSE as a function of k. Label the y-axis “Mean CV MSE” and
+the x-axis “k”. (1 pt)
+
+```{r}
+
+plot <- ggplot(df, 
+               aes(x =k,
+                   y = mean_cv_error)) +
+        geom_line() +
+        labs(title = "Mean CV MSE as a function of k", 
+             x = "k",
+             y = "Mean CV MSE") 
+plot
+
+```
 
 
 
