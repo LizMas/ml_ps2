@@ -2,10 +2,10 @@
 title: "Problem Set 2"
 author: "Liz Masten"
 date: "10/11/2020"
-output: html_document
+output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 library(AER)
@@ -22,32 +22,39 @@ library(tidyverse)
 
 (a) Compute the Euclidean distance between observation 3 and the test point, X1 = X2 =X3 = 1
 
-Because each X value for Observation 3 is 0, the Euclidean distance between Observation 3 and the test points of 1 is 1. 
+$$\sqrt{(0-1)^2 + (0-1)^2 + (0-1)^2} = \sqrt 3 = 1.732$$ 
 
 (b) Using Euclidean distance, what is our prediction for an observation with X1= X2 = X3 = 1 with K = 1? Why?
 
-Our Euclidean distance is 1, so our prediction is black because Observations 4 and 6 each have 2/3 outcome as 1. 
+The nearest neighbor to test point (1,1,1) is black, because black has the lowest Euclidean distance to the test point (observation 4 with a distance of 1).
 
 (c) Using Euclidean distance, what is our prediction with K = 3? Why?
 
-Now that K=3, 2 observations are still black but the third observation is white because Observations 5 and 3 are both plus or minus 1 from 1. 
+Using the three lowest Euclidean distances, we get White (Obs 3), Black (Obs 4), and White (Obs 2 OR 5- they both have a Euclidean distance of 2 but we only have room for one. Luckily both observations are the same color). White wins. 
 
 (d) Suppose the table looked like this instead (i.e. a regression problem)
 
-### 2. Let’s say I have a model with 30 potential covariates. How many potential variants on the
-models can I have? What does this imply about the tradeoff between forward/backward
-selection over best subset selection. (0.5 pts)
+2 
 
+### 2. Let’s say I have a model with 30 potential covariates. How many potential variants on the models can I have? What does this imply about the tradeoff between forward/backward selection over best subset selection. (0.5 pts)
 
+We can have this many potential variants: 
 
-### 3. If the underlying data is highly linear, we would expect QDA to outperform LDA. True or
-False? (0.5 pts)
+```{r}
+
+2^30
+
+```
+
+Best subset selection will be compuationally intense. Forward selection will be less intense because it starts with no predictors and adds until no further additions are warranted, while backwards selection will be intense because it starts with all predictors and takes away observations one by one. 
+
+### 3. If the underlying data is highly linear, we would expect QDA to outperform LDA. True or False? (0.5 pts)
 
 False- LDA outperforms QDA when data is linear because LDA is Linear Discriminant Analysis. 
 
 ### 4. We have a dataset of genetics sequencing outcome, with 30 observations and 4000 variables. You are trying to determine the best method for regression analysis. Colleague A is advocating for KNN, Colleague B is advocating for linear regression, Colleague C thinks Colleague A and B are both wrong. Who should you side with? (1 pt)
 
-Parametric models generally outperform non-parametric models on datasets with a small number of observations per feature. Because KNN is non-parametric, this is not a good choice. However, linear regression does not perform well when the number of features exceeds the number of observations. Therefore, Colleague C is correct- neither KNN nor linear regression would be good for this dataset. 
+Parametric models generally outperform non-parametric models on datasets with a small number of observations per feature. Because KNN is non-parametric, this is not a good choice because it may lead to overfitting. However, linear regression does not perform well when the number of features exceeds the number of observations. Therefore, Colleague C is correct- neither KNN nor linear regression would be good for this dataset. 
 
 ### 5. We have a dataset of genetics sequencing outcome, with 3,000 observations and 40,000 variables. You are trying to determine the best method for classification analysis. Colleague A is advocating for QDA but Colleague C is worried. Why might she be concerned? (1 pt)
 
@@ -61,11 +68,11 @@ Logistic regression will perform better because logistic regressions are bounded
 
 ### 7. What is the shrinkage penalty for ridge regression? (0.5pts)
 
-Ridge regression uses L2 for shrinkage penalty, which means that it uses the square of coefficients. 
+Ridge regression uses L2 for shrinkage penalty, which means that it uses the square of the sum of the coefficients. 
 
 ### 8. What is the shrinkage penalty for lasso regression? (0.5pts)
 
-The shrinkage penalty for Lasso uses L1, meaning that it takes the absolute value of coefficients. 
+The shrinkage penalty for Lasso uses L1, meaning that it takes the absolute value of the sum of the coefficients. 
 
 
 ### 9. How do the different shrinkage penalties influence variable selection for lasso vs ridge? (0.5pts)
@@ -74,10 +81,9 @@ Lasso regressions can perform variable selection by making some variables 0, mea
 
 # Data Questions 
 
-### 1. How many observations have missing values for at least one feature? Drop those observations
-for now. (1 pt) 
+### 1. How many observations have missing values for at least one feature? Drop those observations for now. (1 pt) 
 
-One observation contained at least one NA value. 
+One observation contained at least one NA value. Here's the code: 
 
 ```{r}
 
@@ -111,7 +117,9 @@ service (Factor)
 
 ```{r}
 
-str(data)
+#this is huge and we don't need to see it: 
+
+cat_vars <- str(data)
 
 ```
 
@@ -142,7 +150,7 @@ find_r2 <- summary(model_3)
 
 ```
 
-### 4. Run lasso regression with cross-validation using the canned function cv.glmnet from the package glmnet. You can use the λ sequence generated by grid function we used in section notes 4. In order to receive credit for this question, make the line immediately preceding this command say set.seed(222) and run the two lines together. Please report all numbers by rounding to three decimal places. (2 pts)
+### 4. Run lasso regression with cross-validation using the canned function cv.glmnet from the package glmnet. You can use the Lambda sequence generated by grid function we used in section notes 4. In order to receive credit for this question, make the line immediately preceding this command say set.seed(222) and run the two lines together. Please report all numbers by rounding to three decimal places. (2 pts)
 
 ```{r}
 
@@ -168,18 +176,16 @@ lasso <- cv.glmnet(x = as.matrix(binary[,1:75]),
 
 print(lasso$lambda)
 
-# print(round(lasso$cvm,3))
 
 ```
 
 
-• Which λ had the lowest mean cross-validation error for 5 fold cross validation?
+• Which Lambda had the lowest mean cross-validation error for 5 fold cross validation?
 
-Lambda number 76 
 
 ```{r}
 
-# print(lasso$lambda.min) %>% round(digits = 3)
+print(lasso$lambda.min) %>% round(digits = 3)
 
 ```
 
@@ -191,17 +197,31 @@ print(lasso$lambda.min) %>% round(digits = 3)
 
 ```
 
+• What was the standard error of the mean cross-validation error for this value of Lambda?
 
-• What was the standard error of the mean cross-validation error for this value of λ?
+47.12
 
 ```{r}
 
-#?
+ver1 <- do.call( 'cbind', list(lambda = lasso$lambda,
+                                cross_validation_error = lasso$cvm,
+                                standard_error = lasso$cvsd,
+                                cvup = lasso$cvup,
+                                cvlo = lasso$cvlo)) 
+
+ver2 <- data.frame(ver1) %>%
+  arrange(cross_validation_error) %>%
+  head(1) %>%
+  round(3)
+
+ver2
 
 ```
 
 
-• What was the largest value of λ whose mean cross validation error was within one standard deviation of the lowest cross-validation error?
+
+
+• What was the largest value of Lambda whose mean cross validation error was within one standard deviation of the lowest cross-validation error?
 
 ```{r}
 
@@ -213,12 +233,9 @@ print(lasso$lambda.1se) %>% round(digits = 3)
 
 
 
-### 5. Using the same data, implement your own 5-fold cross-validation routine for KNN for k =
-1, ..., 20 (e.g. write the cross-validation routine yourself rather than using a canned package).
-In the 90s, a popular policy response to high rates of alcohol related fatalities was to increase
-taxes on alcohol. Consider the prediction problem of predicting beer tax (tax on cases of
-beer) using all of the other variables. Include the snippet of code you wrote here. It should
-not exceed 20 lines. Which k is best according to CV? (2 pts)
+### 5. Using the same data, implement your own 5-fold cross-validation routine for KNN for k = 1, ..., 20 (e.g. write the cross-validation routine yourself rather than using a canned package). In the 90s, a popular policy response to high rates of alcohol related fatalities was to increase taxes on alcohol. Consider the prediction problem of predicting beer tax (tax on cases of beer) using all of the other variables. Include the snippet of code you wrote here. It should not exceed 20 lines. Which k is best according to CV? (2 pts)
+
+The best k is 12. 
 
 ```{r}
 
@@ -254,7 +271,7 @@ cross_validation_KNN  <- function(data_x, data_y, k_seq, kfolds) {
 
 set.seed(222) 
 
- knn_cv_error  <- cross_validation_KNN(data_x = binary[,-76],
+knn_cv_error  <- cross_validation_KNN(data_x = binary[,-76],
                                                 data_y = binary[,76],
                                                 k_seq = seq(20),
                                                 kfolds = 5)
@@ -268,10 +285,11 @@ df <- as.data.frame(mean_cv_error)
 
 df <- tibble::rowid_to_column(df, "k")
 
+df
+
 ``` 
 
-### 6. Plot mean cross-validation MSE as a function of k. Label the y-axis “Mean CV MSE” and
-the x-axis “k”. (1 pt)
+### 6. Plot mean cross-validation MSE as a function of k. Label the y-axis “Mean CV MSE” and the x-axis “k”. (1 pt)
 
 ```{r}
 
